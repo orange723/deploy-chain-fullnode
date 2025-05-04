@@ -11,3 +11,5 @@ from [publicnode](https://www.publicnode.com/snapshots)
 - opbnb
 - arbone
 - arbnova
+- linea
+- scroll
