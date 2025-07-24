@@ -2,13 +2,8 @@
 set -e
 # This script deploys an Ethereum full node using Docker Compose.
 # It assumes you have Docker and Docker Compose installed.
+# Update: 2025-7-24
 # Usage: ./init-eth.sh
-
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo "Docker is not installed. Please install Docker first."
-    exit 1
-fi
 
 # Create a directory for the Ethereum node data
 ETH_DATA_DIR="./eth_data"
@@ -16,7 +11,7 @@ ETH_DATA_DIR="./eth_data"
 # Create a directory for the Lighthouse beacon node data
 LIGHTHOUSE_DATA_DIR="./lighthouse_data"
 
-# Create the data directories if they do not exist
+# Create the data directories
 mkdir -p "$ETH_DATA_DIR"
 mkdir -p "$LIGHTHOUSE_DATA_DIR"
 
