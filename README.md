@@ -8,8 +8,8 @@ from [publicnode](https://www.publicnode.com/snapshots)
 
 - eth
 - bnb
+- bnbtestnet
 - opbnb
 - arbone
-- arbnova
 - linea
 - scroll

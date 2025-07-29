@@ -6,7 +6,6 @@ services:
     restart: always
     ports:
       - "8545:8545"
-      - "6060:6060"
       - "30303:30303"
       - "30303:30303/udp"
     volumes:
@@ -29,9 +28,6 @@ services:
       --ws.addr 0.0.0.0
       --ws.api "eth,net,web3"
       --ws.origins "*"
-      --metrics
-      --metrics.addr 0.0.0.0
-      --metrics.port 6060
       --authrpc.addr 0.0.0.0
       --authrpc.port 8551
       --authrpc.vhosts "*"
@@ -47,7 +43,6 @@ services:
     restart: always
     ports:
       - "5052:5052"
-      - "5054:5054"
       - "9000:9000"
     volumes:
       - ./jwt.hex:/opt/jwt.hex
@@ -61,10 +56,6 @@ services:
       --http-address "0.0.0.0"
       --http-allow-origin "*"
       --port 9000
-      --metrics
-      --metrics-address "0.0.0.0"
-      --metrics-allow-origin 5054
       --execution-endpoint "http://geth:8551"
       --execution-jwt "/opt/jwt.hex"
-      --checkpoint-sync-url https://mainnet.checkpoint.sigp.io
       --prune-blobs false
