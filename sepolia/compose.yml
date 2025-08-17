@@ -1,0 +1,62 @@
+services:
+  geth:
+    image: ethereum/client-go:v1.15.10
+    container_name: geth
+    restart: unless-stopped
+    ports:
+      - 8545:8545  
+      - 8551:8551
+      - 30303:30303
+      - 30303:30303/udp
+    volumes:
+      - ./eth_data:/data
+      - ./jwt.hex:/jwt.hex
+    command: >
+      --sepolia  
+      --datadir=/data  
+      --gcmode=full
+      --syncmode=full
+      --authrpc.addr=0.0.0.0
+      --authrpc.port=8551
+      --authrpc.vhosts=*
+      --authrpc.jwtsecret=/jwt.hex
+      --port=30303
+      --discovery.port=30303
+      --http
+      --http.addr=0.0.0.0
+      --http.port=8545
+      --http.api=eth,net,engine,web3
+      --http.vhosts=*
+      --ws
+      --ws.addr=0.0.0.0
+      --ws.port=8545
+      --ws.api=eth,net,web3,engine
+      --txlookuplimit=0
+      --verbosity=3
+
+  nimbus:
+    image: statusim/nimbus-eth2:multiarch-v25.7.1
+    container_name: nimbus
+    restart: unless-stopped
+    user: root
+    ports:
+      - 9000:9000  
+      - 9000:9000/udp  
+      - 5052:5052
+    volumes:
+      - ./nimbus_data:/data
+      - ./jwt.hex:/jwt.hex
+    command: >
+      --network=sepolia  
+      --data-dir=/data  
+      --tcp-port=9000  
+      --udp-port=9000  
+      --rest  
+      --rest-port=5052  
+      --rest-address=0.0.0.0  
+      --rest-allow-origin=*  
+      --web3-url=http://geth:8551  
+      --jwt-secret=/jwt.hex
+      --enr-auto-update  
+      --listen-address=0.0.0.0  
+      --external-beacon-api-url=https://beaconstate-sepolia.chainsafe.io

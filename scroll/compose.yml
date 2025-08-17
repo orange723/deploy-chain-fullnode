@@ -1,0 +1,49 @@
+services:
+
+  l2geth:
+      image: scrolltech/l2geth:scroll-v5.9.2
+      container_name: l2geth-docker
+      stop_signal: SIGINT
+      stop_grace_period: 60s
+      restart: "unless-stopped"
+      environment:
+      - CHAIN_ID=534352
+      - RUST_LOG="info"
+      volumes:
+      - ./data:/volume/l2geth/data
+      ports:
+      - 8545:8545
+      - 30303:30303
+      - 30303:30303/udp
+      command: >
+        --scroll
+        --scroll-mpt
+        --snapshot=false
+        --metrics
+        --pprof.addr 0.0.0.0
+        --pprof.port 6060
+        --datadir /volume/l2geth/data
+        --gcmode archive
+        --http
+        --http.addr 0.0.0.0
+        --http.port 8545
+        --http.api eth,net,web3,debug,scroll
+        --http.corsdomain "*"
+        --http.vhosts "*"
+        --ws
+        --ws.addr 0.0.0.0
+        --ws.port 8545
+        --ws.api eth,net,web3,debug,scroll
+        --ws.origins "*"
+        --cache.noprefetch
+        --txlookuplimit 0
+        --l1.endpoint "YOUR_L1_ENDPOINT"
+        --da.blob.blobscan "https://api.blobscan.com/blobs/"
+        --da.blob.beaconnode "YOUR_BEACON_NODE_ENDPOINT"
+        --da.blob.awss3 "https://scroll-sepolia-blob-data.s3.us-west-2.amazonaws.com/"
+        --cache.snapshot=0
+      logging:
+          driver: "json-file"
+          options:
+              max-size: "100m"
+              max-file: "1"

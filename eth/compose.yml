@@ -9,7 +9,7 @@ services:
       - "30303:30303"
       - "30303:30303/udp"
     volumes:
-      - ./jwt.hex:/opt/jwt.hex
+      - ./jwt.hex:/jwt.hex
       - ./eth_data:/root/.ethereum
     command: >
       --mainnet
@@ -28,34 +28,35 @@ services:
       --ws.addr 0.0.0.0
       --ws.api "eth,net,web3"
       --ws.origins "*"
-      --authrpc.addr 0.0.0.0
       --authrpc.port 8551
       --authrpc.vhosts "*"
-      --authrpc.jwtsecret "/opt/jwt.hex"
+      --authrpc.jwtsecret "/jwt.hex"
       --port 30303
       --discovery.port 30303
       --cache 8192
       --txlookuplimit 0
 
-  lighthouse:
-    image: sigp/lighthouse:latest
-    container_name: lighthouse
+  nimbus:
+    image: statusim/nimbus-eth2:multiarch-v25.7.1
+    container_name: nimbus
     restart: always
+    user: root
     ports:
-      - "5052:5052"
-      - "9000:9000"
+      - 5052:5052
+      - 9000:9000
+      - 9000:9000/udp
     volumes:
-      - ./jwt.hex:/opt/jwt.hex
-      - ./lighthouse_data:/root/.lighthouse
+      - ./jwt.hex:/jwt.hex
+      - ./nimbus_data:/home/user/nimbus-eth2/build/data
     command: >
-      lighthouse
-      beacon_node
-      --network "mainnet"
-      --http
-      --http-port 5052
-      --http-address "0.0.0.0"
-      --http-allow-origin "*"
-      --port 9000
-      --execution-endpoint "http://geth:8551"
-      --execution-jwt "/opt/jwt.hex"
-      --prune-blobs false
+      --network="mainnet"
+      --data-dir="/home/user/nimbus-eth2/build/data"
+      --tcp-port=9000
+      --udp-port=9000
+      --rest
+      --rest-port=5052
+      --rest-address="0.0.0.0"
+      --rest-allow-origin="*"
+      --web3-url="http://geth:8551"
+      --jwt-secret="/jwt.hex"
+      --enr-auto-update=true

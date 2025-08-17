@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 # This script deploys a Arbone full node using Docker and Compose.
-# Update: 2025-7-27
+# Update: 2025-8-17
 # Usage: ./init-arbone.sh
 
 # Create a directory for the Arbone node data and snapdata
