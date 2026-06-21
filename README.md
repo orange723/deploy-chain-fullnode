@@ -31,20 +31,18 @@
 git clone git@github.com-personal:orange723/deploy-chain-fullnode.git
 cd deploy-chain-fullnode
 
-# 2. 进入目标链目录
-cd eth
+# 2. 初始化目标链（创建数据目录、JWT 等）
+./init.sh eth
 
-# 3. 运行初始化脚本（创建数据目录、JWT 等）
-./init-eth.sh
+# 3. 进入目录并启动
+cd eth && docker compose up -d
 
-# 4. 启动
-docker compose up -d
-
-# 5. 查看日志
+# 4. 查看日志
 docker compose logs -f
 ```
 
-所有链的启动流程一致：`cd <链目录> && ./init-*.sh && docker compose up -d`
+所有链的启动流程一致：`./init.sh <链名> && cd <目录> && docker compose up -d`
+查看支持的链：`./init.sh --help`
 
 ## 环境变量
 
@@ -154,6 +152,7 @@ docker compose logs --since 1h geth     # 最近 1 小时
 .
 ├── .gitignore
 ├── README.md
+├── init.sh         # 统一初始化脚本
 ├── eth/            # Ethereum 主网
 ├── sepolia/        # Sepolia 测试网
 ├── bnb/            # BNB Chain 主网
@@ -165,5 +164,4 @@ docker compose logs --since 1h geth     # 最近 1 小时
 
 每个链目录包含：
 - `compose.yml` — Docker Compose 编排定义
-- `init-*.sh` — 数据目录初始化脚本
-- `.env.example`（如有外部依赖） — 环境变量模板
+- `.env.example`（如有外部依赖）— 环境变量模板

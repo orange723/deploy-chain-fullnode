@@ -465,12 +465,11 @@
 git clone git@github.com:<span class="k">orange723/deploy-chain-fullnode</span>.git
 cd deploy-chain-fullnode
 
-<span class="dim"># 2. 进入目标链目录并初始化</span>
-cd <span class="k">eth</span>
-./init-eth.sh
+<span class="dim"># 2. 初始化目标链</span>
+./init.sh <span class="k">eth</span>
 
-<span class="dim"># 3. 启动</span>
-docker compose up -d
+<span class="dim"># 3. 进入目录并启动</span>
+cd <span class="k">eth</span> && docker compose up -d
 
 <span class="dim"># 4. 查看同步进度</span>
 docker compose exec geth geth attach --exec <span class="s">'eth.syncing'</span> http://localhost:8545</pre></div>
