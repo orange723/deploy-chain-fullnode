@@ -1,0 +1,28 @@
+# Data directories
+*/data/
+*/eth_data/
+*/nimbus_data/
+*/lighthouse_data/
+*/snapdata/
+
+# Secrets / generated files
+jwt.hex
+*.key
+*.pem
+.env
+!.env.example
+
+# Snapshots
+*.tar.gz
+*.tar
+*.zip
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

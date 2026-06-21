@@ -10,8 +10,8 @@ services:
     ports:
       - "8545:8545"
     command:
-    - --parent-chain.connection.url="YOUR_ETH_NODE_URL"
-    - --parent-chain.blob-client.beacon-url="YOUR_BLOB_CLIENT_URL"
+    - --parent-chain.connection.url="${ARBONE_L1_URL:?err}"
+    - --parent-chain.blob-client.beacon-url="${ARBONE_BEACON_URL:?err}"
     - --chain.id=42161
     - --http.api=net,web3,eth,arb
     - --http.corsdomain=*
@@ -23,3 +23,22 @@ services:
     - --ws.origins=*
     - --ws.api=net,web3,eth,arb
     - --execution.tx-lookup-limit=0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST http://localhost:8545 -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"net_listening\",\"params\":[],\"id\":1}' | grep -q true || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: "2"
+        reservations:
+          memory: 4G
+          cpus: "1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

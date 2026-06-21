@@ -3,7 +3,7 @@ services:
   geth:
     build: .
     container_name: geth
-    restart: always
+    restart: unless-stopped
     ports:
       - 8545:8545
       - 30303:30303
@@ -35,3 +35,22 @@ services:
       --syncmode full
       --txlookuplimit 0
       --verbosity 3
+    healthcheck:
+      test: ["CMD-SHELL", "geth attach --exec 'net.listening' http://localhost:8545 2>/dev/null | grep -q true || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+          cpus: "4"
+        reservations:
+          memory: 8G
+          cpus: "2"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

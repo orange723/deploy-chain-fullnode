@@ -23,7 +23,7 @@ services:
       --http
       --http.addr=0.0.0.0
       --http.port=8545
-      --http.corsdomain="*""
+      --http.corsdomain="*"
       --http.api='admin,web3,eth,txpool,net'
       --http.vhosts='*'
       --ws
@@ -40,3 +40,22 @@ services:
     volumes:
       - ./genesis.json:/genesis.json:ro
       - ./data:/root/.ethereum
+    healthcheck:
+      test: ["CMD-SHELL", "geth attach --exec 'net.listening' http://localhost:8545 2>/dev/null | grep -q true || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: "2"
+        reservations:
+          memory: 4G
+          cpus: "1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

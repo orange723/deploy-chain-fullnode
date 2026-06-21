@@ -37,13 +37,27 @@ services:
         --ws.origins "*"
         --cache.noprefetch
         --txlookuplimit 0
-        --l1.endpoint "YOUR_L1_ENDPOINT"
+        --l1.endpoint "${SCROLL_L1_ENDPOINT:?err}"
         --da.blob.blobscan "https://api.blobscan.com/blobs/"
-        --da.blob.beaconnode "YOUR_BEACON_NODE_ENDPOINT"
+        --da.blob.beaconnode "${SCROLL_BEACON_ENDPOINT:?err}"
         --da.blob.awss3 "https://scroll-sepolia-blob-data.s3.us-west-2.amazonaws.com/"
         --cache.snapshot=0
+      healthcheck:
+        test: ["CMD-SHELL", "geth attach --exec 'net.listening' http://localhost:8545 2>/dev/null | grep -q true || exit 1"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 120s
+      deploy:
+        resources:
+          limits:
+            memory: 8G
+            cpus: "2"
+          reservations:
+            memory: 4G
+            cpus: "1"
       logging:
           driver: "json-file"
           options:
               max-size: "100m"
-              max-file: "1"
+              max-file: "3"

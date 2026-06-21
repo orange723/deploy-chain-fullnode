@@ -1,81 +1,169 @@
 # deploy-chain-fullnode
 
-本仓库收集了使用 Docker / Docker Compose 部署各类区块链全节点的参考配置与初始化脚本，目的是方便在本地或服务器上快速搭建不同链（L1/L2）的节点环境。
+一键部署多链全节点 — 基于 Docker Compose 的生产级区块链节点编排仓库。
 
-**支持的链（目录）**
-- `eth`：Ethereum 主网（执行节点 + 共识客户端 示例）
-- `sepolia`：Sepolia 测试网
-- `bnb`：BNB 主网
-- `bnbtestnet`：BNB 测试网
-- `arbone`：Arbitrum One (Nitro)
-- `linea`：Linea
-- `scroll`：Scroll
+## 支持的链
 
-## 链快照（Chain Snapshots）
-为加速节点首次同步，可以使用链快照（snapshot）。常见来源：
+| 链 | 目录 | 客户端 | 类型 |
+|---|---|---|---|
+| Ethereum Mainnet | `eth/` | Geth + Nimbus | L1 |
+| Sepolia Testnet | `sepolia/` | Geth + Nimbus | L1 测试网 |
+| BNB Chain | `bnb/` | BSC Geth (自构建) | L1 |
+| BNB Testnet | `bnbtestnet/` | BSC Geth (自构建) | L1 测试网 |
+| Arbitrum One | `arbone/` | Nitro (offchainlabs/nitro-node) | L2 |
+| Linea | `linea/` | Geth (genesis 初始化) | L2 |
+| Scroll | `scroll/` | scrolltech/l2geth | L2 |
 
-- publicnode 快照： https://www.publicnode.com/snapshots
+## 前置条件
 
-使用快照的基本步骤（通用）：
+| 依赖 | 最低版本 |
+|---|---|
+| Docker | ≥ 24.0 |
+| Docker Compose | ≥ v2.20 |
+| OpenSSL | ≥ 1.1 (仅 eth/sepolia 生成 JWT 用) |
 
-1. 停止正在运行的节点容器（若已启动）：
+> L2 链（Arbitrum、Scroll）启动前需预先配置 L1 RPC 端点环境变量，见下方[环境变量](#环境变量)。
+
+## 快速启动
+
 ```bash
-docker compose down
-```
-2. 将下载的快照解压到对应的数据目录（例如 `eth/eth_data` 或各链目录下的 `data`）：
-```bash
-# 假设 snapshot.tar.gz 在上级目录
-tar -xzf snapshot.tar.gz -C ./eth/eth_data
-```
-3. 修正目录权限（确保容器进程能访问）：
-```bash
-sudo chown -R $(id -u):$(id -g) ./eth/eth_data
-```
-4. 启动容器：
-```bash
-docker compose up -d
-```
+# 1. 克隆仓库
+git clone git@github.com-personal:orange723/deploy-chain-fullnode.git
+cd deploy-chain-fullnode
 
-注意：不同客户端/镜像使用的目录结构可能不同，务必对照 `compose.yml` 中挂载的宿主路径（volumes）把快照放到正确位置。
-
-## 使用前准备
-- 在宿主机上安装 `Docker` 和 `Docker Compose`。
-- 根据需要准备快照文件，可显著减少首次同步时间。
-
-## 快速启动（通用步骤）
-1. 进入对应链目录，例如以太坊主网：
-```bash
+# 2. 进入目标链目录
 cd eth
-```
-2. 运行初始化脚本（创建数据目录、生成必要文件等）：
-```bash
+
+# 3. 运行初始化脚本（创建数据目录、JWT 等）
 ./init-eth.sh
+
+# 4. 启动
+docker compose up -d
+
+# 5. 查看日志
+docker compose logs -f
 ```
-3. 启动服务：
+
+所有链的启动流程一致：`cd <链目录> && ./init-*.sh && docker compose up -d`
+
+## 环境变量
+
+部分链依赖外部服务，需要创建 `.env` 文件：
+
+**Arbitrum One** (`arbone/`)
 ```bash
+cp arbone/.env.example arbone/.env
+# 编辑 .env，填入你的 L1 节点地址：
+#   ARBONE_L1_URL=https://your-eth-node:8545
+#   ARBONE_BEACON_URL=https://your-beacon-node:5052
+```
+
+**Scroll** (`scroll/`)
+```bash
+cp scroll/.env.example scroll/.env
+# 编辑 .env：
+#   SCROLL_L1_ENDPOINT=https://your-eth-node:8545
+#   SCROLL_BEACON_ENDPOINT=https://your-beacon-node:5052
+```
+
+## 快照加速（Snapshot）
+
+首次同步可能耗时数天，建议使用快照加速。
+
+```bash
+# 1. 停止节点
+docker compose down
+
+# 2. 下载并解压快照到数据目录
+tar -xzf snapshot.tar.gz -C ./eth_data
+
+# 3. 修正权限
+sudo chown -R $(id -u):$(id -g) ./eth_data
+
+# 4. 重启
 docker compose up -d
 ```
 
-## 各链简要说明
-- `eth`：使用 `ethereum/client-go`（Geth）作为执行客户端，示例包含 `statusim/nimbus-eth2` 作为共识客户端。`init-eth.sh` 会生成 `jwt.hex`（Engine API 用），并创建数据目录。
-- `sepolia`：类似 `eth` 的测试网配置。
-- `bnb` / `bnbtestnet`：包含用于 BSC 的 `Dockerfile`、`compose.yml` 和 `config.toml`，`init-bnb.sh` 会创建 `./data`。
-- `arbone`：Nitro 节点（`offchainlabs/nitro-node`），需要配置上游 L1 节点 URL 与 blob 客户端。
-- `linea`：包含 `genesis.json`，首次运行会执行 `geth init` 初始化数据目录。
-- `scroll`：使用 `scrolltech/l2geth`，`compose.yml` 中含多处需配置的 L1/DA 地址占位。
+> **重要**：快照路径必须匹配 `compose.yml` 中 `volumes` 的挂载路径。
+>
+> 快照来源：[publicnode.com/snapshots](https://www.publicnode.com/snapshots)
 
-## 常见故障排查提示
-- 容器无法访问 RPC：检查端口映射、防火墙及容器日志（`docker compose logs -f <service>`）。
-- 权限问题：确保宿主目录权限正确（`chown`/`chmod`）。
-- JWT 问题（Eth/Engine）：`jwt.hex` 必须在执行与共识客户端之间共享并正确挂载。
+## 资源参考
 
-## 示例：以太坊主网快速示例
+| 链 | 建议内存 | 建议 CPU | 磁盘（归档模式） |
+|---|---|---|---|
+| Ethereum Mainnet | ≥ 16 GB | 4 核 | ≥ 2 TB SSD |
+| Sepolia | ≥ 8 GB | 2 核 | ≥ 500 GB SSD |
+| BNB Chain | ≥ 16 GB | 4 核 | ≥ 2 TB SSD |
+| BNB Testnet | ≥ 8 GB | 2 核 | ≥ 500 GB SSD |
+| Arbitrum One | ≥ 8 GB | 2 核 | ≥ 500 GB SSD |
+| Linea | ≥ 8 GB | 2 核 | ≥ 500 GB SSD |
+| Scroll | ≥ 8 GB | 2 核 | ≥ 500 GB SSD |
+
+> 生产环境建议预留 20% 资源余量。每项 `compose.yml` 中已配置 `deploy.resources` 限制，可按需调整。
+
+## 健康检查
+
+所有服务均配置了 Docker `healthcheck`：
+
 ```bash
-cd eth
-./init-eth.sh    # 创建数据目录并生成 jwt.hex
-docker compose up -d
-docker compose logs -f geth
+# 查看容器健康状态
+docker compose ps
+
+# 手动验证 RPC
+curl -s -X POST http://localhost:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+
+# 检查同步进度（Geth 系）
+docker compose exec geth geth attach --exec 'eth.syncing' http://localhost:8545
 ```
 
-## 备注
-- 本仓库为参考配置。生产环境请根据机器资源（磁盘 I/O、内存、CPU）与业务需求调整客户端参数（如 `--cache`、`--gcmode`、`--syncmode` 等）。
+## 日志管理
+
+所有服务使用 `json-file` 驱动 + 自动轮转（单文件 100MB，保留 3 个）：
+
+```bash
+docker compose logs -f --tail=100       # 实时跟踪
+docker compose logs --since 1h geth     # 最近 1 小时
+```
+
+## 常见问题
+
+| 现象 | 排查 |
+|---|---|
+| RPC 无响应 | `docker compose ps` 确认容器 Running 且 Healthy |
+| 权限拒绝 | `chown -R $(id -u):$(id -g) ./data` |
+| JWT 认证失败 | 确认 `jwt.hex` 在执行层和共识层容器中挂载路径一致 |
+| 端口冲突 | 检查宿主机 8545/30303 端口占用 `lsof -i :8545` |
+| 同步停滞 | 检查磁盘空间 `df -h`，磁盘满会导致同步卡死 |
+
+## 生产环境检查清单
+
+- [ ] 配置充足的磁盘 IOPS（NVMe SSD 推荐）
+- [ ] 调优 `deploy.resources` 限制以匹配实际机器规格
+- [ ] 配置外部监控（Prometheus + Grafana）/ 告警
+- [ ] 启用防火墙规则，仅暴露必要的 RPC 端口
+- [ ] 使用反向代理（Caddy/Nginx）暴露 RPC，而非直接暴露容器端口
+- [ ] 定期备份数据目录并验证快照可恢复
+- [ ] 配置日志聚合（Loki / ELK）
+
+## 目录结构
+
+```
+.
+├── .gitignore
+├── README.md
+├── eth/            # Ethereum 主网
+├── sepolia/        # Sepolia 测试网
+├── bnb/            # BNB Chain 主网
+├── bnbtestnet/     # BNB Chain 测试网
+├── arbone/         # Arbitrum One (Nitro)
+├── linea/          # Linea
+└── scroll/         # Scroll
+```
+
+每个链目录包含：
+- `compose.yml` — Docker Compose 编排定义
+- `init-*.sh` — 数据目录初始化脚本
+- `.env.example`（如有外部依赖） — 环境变量模板
